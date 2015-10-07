@@ -14,6 +14,9 @@ __doc__ = """
 auth = {"aws_access_key_id": os.environ['AWS_FETCHER_KEY'],
         "aws_secret_access_key": os.environ['AWS_FETCHER_SECRET'],}
 
+AWS_INSTANCE_STATE_START = 'start'
+AWS_INSTANCE_STATE_STOP = 'stop'
+
 def list_instances(auth, verbose=False):
     """ list all instances """
     ec2 = boto.ec2.connect_to_region("us-east-1", **auth)
@@ -24,10 +27,21 @@ def list_instances(auth, verbose=False):
             print("\n")
             pprint(meta_data)
         else:
-            print("{id} -{tags}".format(id=instance.id,tags=meta_data['tags']))
-
+            print("{id} - {state} - {tags} - {instance_type} -{ip_address}".format(id=meta_data['id'],
+            tags=meta_data['tags'],
+            state=meta_data['_state'],
+            ip_address=meta_data['ip_address'],
+            instance_type=meta_data['instance_type']))
+            
 def update_instance_state(instance_id, instance_state):
     """ update instance state """
+    ec2 = boto.ec2.connect_to_region("us-east-1", **auth)
+    instance = ec2.get_all_instances(instance_ids=instance_id)
+    if instance_state == AWS_INSTANCE_STATE_START:
+        print("starting instance %s" % instance_id)
+        instance[0].instances[0].start()
+    elif instance_state == AWS_INSTANCE_STATE_STOP:
+        instance[0].instances[0].stop()
 
 def run_aws(auth):
     
